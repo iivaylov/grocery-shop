@@ -33,8 +33,8 @@ public class User {
     @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "is_admin")
-    private boolean isAdmin;
+/*    @Column(name = "is_admin")
+    private boolean isAdmin;*/
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

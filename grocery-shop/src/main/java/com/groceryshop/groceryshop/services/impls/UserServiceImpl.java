@@ -1,8 +1,10 @@
 package com.groceryshop.groceryshop.services.impls;
 
+import com.groceryshop.groceryshop.controllers.requests.RegisterUserRequest;
 import com.groceryshop.groceryshop.dtos.ProductDTO;
 import com.groceryshop.groceryshop.dtos.UserDTO;
 import com.groceryshop.groceryshop.exceptions.GroceryAuthenticationException;
+import com.groceryshop.groceryshop.exceptions.GroceryDuplicateEntityException;
 import com.groceryshop.groceryshop.exceptions.GroceryEntityNotFoundException;
 import com.groceryshop.groceryshop.models.Product;
 import com.groceryshop.groceryshop.models.User;
@@ -15,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -24,6 +25,8 @@ public class UserServiceImpl implements UserService {
     public static final String PRODUCT_ID_NOT_FOUND = "Product with id [%s] not found.";
     public static final String USER_USERNAME_NOT_FOUND = "User with username [%s] not found.";
     public static final String WRONG_PASSWORD_MSG = "Wrong password.";
+    public static final String PASSWORDS_MATCH_ERROR = "Passwords do not match.";
+    public static final String USERNAME_EXISTS_ERROR = "Username already exists.";
     private final UserDAO userDAO;
     private final ProductDAO productDAO;
     private final ProductDTOMapper productDTOMapper;
@@ -64,7 +67,7 @@ public class UserServiceImpl implements UserService {
         return user.getShoppingList()
                 .stream()
                 .map(productDTOMapper)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -101,10 +104,37 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
+    @Override
+    public void register(RegisterUserRequest registerUserRequest) {
+        validateUsernameNotExists(registerUserRequest.getUsername());
+
+        if (!registerUserRequest.getPassword().equals(registerUserRequest.getConfirmPassword())) {
+            throw new GroceryAuthenticationException(PASSWORDS_MATCH_ERROR);
+        }
+
+        User newUser = buildUserFromRequest(registerUserRequest);
+        userDAO.insertUser(newUser);
+    }
+
     private User getUserFromRepository(int userId) {
         return userDAO.selectUserById(userId)
                 .orElseThrow(() -> new GroceryEntityNotFoundException(
                         USER_ID_NOT_FOUND.formatted(userId)
                 ));
+    }
+
+    private void validateUsernameNotExists(String username) {
+        if (userDAO.selectUserByUsername(username).isPresent()) {
+            throw new GroceryDuplicateEntityException(USERNAME_EXISTS_ERROR);
+        }
+    }
+
+    private User buildUserFromRequest(RegisterUserRequest registerUserRequest) {
+        return User.builder()
+                .username(registerUserRequest.getUsername())
+                .password(registerUserRequest.getPassword())
+                .firstName(registerUserRequest.getFirstname())
+                .lastName(registerUserRequest.getLastname())
+                .build();
     }
 }

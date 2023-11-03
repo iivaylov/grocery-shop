@@ -1,5 +1,6 @@
 package com.groceryshop.groceryshop.services;
 
+import com.groceryshop.groceryshop.controllers.requests.RegisterUserRequest;
 import com.groceryshop.groceryshop.dtos.ProductDTO;
 import com.groceryshop.groceryshop.dtos.UserDTO;
 
@@ -18,4 +19,6 @@ public interface UserService {
     void removeProductFromShoppingList(int userId, int productId);
 
     boolean authenticate(String username, String password);
+
+    void register(RegisterUserRequest registerUserRequest);
 }

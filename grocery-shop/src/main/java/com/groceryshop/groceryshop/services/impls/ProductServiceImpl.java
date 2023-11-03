@@ -38,7 +38,7 @@ public class ProductServiceImpl implements ProductService {
         return productDAO.selectAllProducts()
                 .stream()
                 .map(productDTOMapper)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -91,7 +91,10 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProduct(int productId, UserDTO userDTO) {
-        Product product = productDAO.selectProductById(productId).orElseThrow();
+        Product product = productDAO.selectProductById(productId)
+                .orElseThrow(() -> new GroceryEntityNotFoundException(
+                PRODUCT_ID_NOT_FOUND.formatted(productId)
+                ));
 
         //TODO: Check user permission
 
