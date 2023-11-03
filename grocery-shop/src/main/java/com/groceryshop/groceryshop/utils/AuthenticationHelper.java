@@ -1,7 +1,7 @@
 package com.groceryshop.groceryshop.utils;
 
 import com.groceryshop.groceryshop.dtos.UserDTO;
-import com.groceryshop.groceryshop.exceptions.GroceryAuthorizationError;
+import com.groceryshop.groceryshop.exceptions.GroceryAuthorizationException;
 import com.groceryshop.groceryshop.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -21,13 +21,13 @@ public class AuthenticationHelper {
 
     public UserDTO tryGetUser(HttpHeaders headers) {
         if (!headers.containsKey(AUTHORIZATION_HEADER_NAME)) {
-            throw new GroceryAuthorizationError(INVALID_AUTHENTICATION_ERROR);
+            throw new GroceryAuthorizationException(INVALID_AUTHENTICATION_ERROR);
         }
 
         String userInfo = headers.getFirst(AUTHORIZATION_HEADER_NAME);
 
         if (userInfo == null) {
-            throw new GroceryAuthorizationError(USER_INFORMATION_IS_MISSING);
+            throw new GroceryAuthorizationException(USER_INFORMATION_IS_MISSING);
         }
 
         String username = getUsername(userInfo);
@@ -41,14 +41,14 @@ public class AuthenticationHelper {
         if (isAuthenticated) {
             return userService.getUserByUsername(username);
         } else {
-            throw new GroceryAuthorizationError(INVALID_AUTHENTICATION_ERROR);
+            throw new GroceryAuthorizationException(INVALID_AUTHENTICATION_ERROR);
         }
     }
 
     private String getUsername(String userInfo) {
         int firstSpace = userInfo.indexOf(" ");
         if (firstSpace == -1) {
-            throw new GroceryAuthorizationError(INVALID_AUTHENTICATION_ERROR);
+            throw new GroceryAuthorizationException(INVALID_AUTHENTICATION_ERROR);
         }
 
         return userInfo.substring(0, firstSpace);
@@ -57,7 +57,7 @@ public class AuthenticationHelper {
     private String getPassword(String userInfo) {
         int firstSpace = userInfo.indexOf(" ");
         if (firstSpace == -1) {
-            throw new GroceryAuthorizationError(INVALID_AUTHENTICATION_ERROR);
+            throw new GroceryAuthorizationException(INVALID_AUTHENTICATION_ERROR);
         }
 
         return userInfo.substring(firstSpace + 1);

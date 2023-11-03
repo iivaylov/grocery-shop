@@ -3,7 +3,7 @@ package com.groceryshop.groceryshop.controllers;
 import com.groceryshop.groceryshop.controllers.requests.ProductRequest;
 import com.groceryshop.groceryshop.dtos.ProductDTO;
 import com.groceryshop.groceryshop.dtos.UserDTO;
-import com.groceryshop.groceryshop.exceptions.GroceryEntityNotFound;
+import com.groceryshop.groceryshop.exceptions.GroceryEntityNotFoundException;
 import com.groceryshop.groceryshop.services.ProductService;
 import com.groceryshop.groceryshop.utils.AuthenticationHelper;
 import jakarta.validation.Valid;
@@ -75,7 +75,7 @@ public class ProductRestController {
 
     private static void ensureProductNamesMatch(ProductRequest productRequest, ProductDTO productToUpdate) {
         if (!productToUpdate.name().equals(productRequest.getName())) {
-            throw new GroceryEntityNotFound(PRODUCT_ERROR_MSG);
+            throw new GroceryEntityNotFoundException(PRODUCT_ERROR_MSG);
         }
     }
 

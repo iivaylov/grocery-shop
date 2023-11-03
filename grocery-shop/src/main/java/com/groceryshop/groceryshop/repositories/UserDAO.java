@@ -6,7 +6,9 @@ import java.util.Optional;
 
 public interface UserDAO {
 
-    Optional<User> selectUserById(Integer userId);
+    Optional<User> selectUserById(int userId);
+
+    Optional<User> selectUserByUsername(String username);
 
     void insertUser(User user);
 

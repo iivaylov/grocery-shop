@@ -2,7 +2,7 @@ package com.groceryshop.groceryshop.controllers;
 
 import com.groceryshop.groceryshop.dtos.ProductDTO;
 import com.groceryshop.groceryshop.dtos.UserDTO;
-import com.groceryshop.groceryshop.exceptions.GroceryAuthorizationError;
+import com.groceryshop.groceryshop.exceptions.GroceryAuthorizationException;
 import com.groceryshop.groceryshop.services.UserService;
 import com.groceryshop.groceryshop.utils.AuthenticationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +20,13 @@ public class UserRestController {
     public static final String ADD_PRODUCT_MSG = "You have successfully added the product to your shopping list.";
     public static final String REMOVE_PRODUCT_MSG = "You have successfully removed this item from your shopping list.";
 
-    private final AuthenticationHelper authenticationHelper;
     private final UserService userService;
+    private final AuthenticationHelper authenticationHelper;
 
     @Autowired
-    public UserRestController(AuthenticationHelper authenticationHelper, UserService userService) {
-        this.authenticationHelper = authenticationHelper;
+    public UserRestController(UserService userService, AuthenticationHelper authenticationHelper) {
         this.userService = userService;
+        this.authenticationHelper = authenticationHelper;
     }
 
     @GetMapping("/{userId}")
@@ -73,7 +73,7 @@ public class UserRestController {
 
     private static void checkAccessPermissions(int targetUserId, UserDTO executingUser) {
         if (executingUser.id() != targetUserId) {
-            throw new GroceryAuthorizationError(ERROR_MESSAGE);
+            throw new GroceryAuthorizationException(ERROR_MESSAGE);
         }
     }
 }

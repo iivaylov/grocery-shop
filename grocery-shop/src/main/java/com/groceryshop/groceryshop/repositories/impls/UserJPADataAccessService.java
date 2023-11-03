@@ -19,8 +19,16 @@ public class UserJPADataAccessService implements UserDAO {
     }
 
     @Override
-    public Optional<User> selectUserById(Integer userId) {
+    public Optional<User> selectUserById(int userId) {
         return userRepository.findById(userId);
+    }
+
+    @Override
+    public Optional<User> selectUserByUsername(String username) {
+        return userRepository.findAll()
+                .stream()
+                .filter(user -> user.getUsername().equals(username))
+                .findFirst();
     }
 
     @Override
