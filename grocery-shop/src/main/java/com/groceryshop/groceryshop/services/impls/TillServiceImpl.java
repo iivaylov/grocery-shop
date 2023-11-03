@@ -4,21 +4,27 @@ import com.groceryshop.groceryshop.dtos.ProductDTO;
 import com.groceryshop.groceryshop.models.Product;
 import com.groceryshop.groceryshop.services.TillService;
 import com.groceryshop.groceryshop.services.deals.DealStrategy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class TillServiceImpl implements TillService {
 
-    public static final String TOTAL_RESULT_MSG = "Total bill: %s aws and %s clouds";
+    public static final String TOTAL_BILL_AWS_CLOUDS = "Total bill: %s aws and %s clouds";
     public static final String NO_PRODUCTS = "No products selected.";
     public static final int MIN_PRODUCTS = 3;
-    private final Map<Product, Integer> priceList = new HashMap<>();
-    private final List<DealStrategy> dealStrategies = new ArrayList<>();
+    public static final String TOTAL_BILL_CLOUDS = "Total bill: %s clouds";
+    public static final int ONE_HUNDRED_CLOUDS = 100;
+    private final List<DealStrategy> dealStrategies;
+
+    @Autowired
+    public TillServiceImpl(List<DealStrategy> dealStrategies) {
+        this.dealStrategies = dealStrategies;
+        initializeDealStrategies();
+    }
 
     @Override
     public String calculateUserBill(List<ProductDTO> productsDTOs) {
@@ -32,38 +38,44 @@ public class TillServiceImpl implements TillService {
 
         if (products.size() < MIN_PRODUCTS) {
             int result = products.stream()
-                    .mapToInt(priceList::get)
+                    .mapToInt(Product::getPrice)
                     .sum();
-
             return calculateResult(result);
         }
 
-        return summarizePurchaseCost(products);
+        return calculateUserBillWithDeals(products);
     }
 
-    private String summarizePurchaseCost(List<Product> products) {
-        Map<Product, Integer> productCount = new HashMap<>();
-        products.forEach(item -> productCount.put(item, productCount.getOrDefault(item, 0) + 1));
+    public String calculateUserBillWithDeals(List<Product> products) {
+        List<Product> shoppingList = new ArrayList<>(products);
+        int totalDiscount = 0;
 
         for (DealStrategy dealStrategy : dealStrategies) {
-            dealStrategy.applyDeal(products, priceList, productCount);
+            totalDiscount += dealStrategy.applyDeals(shoppingList);
         }
 
-        int result = productCount.entrySet()
-                .stream()
-                .mapToInt(entry -> entry.getValue() * priceList.get(entry.getKey()))
+        int totalAmountBeforeDiscount = shoppingList.stream()
+                .mapToInt(Product::getPrice)
                 .sum();
+        int finalAmount = totalAmountBeforeDiscount - totalDiscount;
 
-        return calculateResult(result);
-    }
-
-    public void addDeal(DealStrategy dealStrategy) {
-        dealStrategies.add(dealStrategy);
+        return calculateResult(finalAmount);
     }
 
     private static String calculateResult(int result) {
-        int aws = result / 100;
-        int clouds = result % 100;
-        return String.format(TOTAL_RESULT_MSG, aws, clouds);
+        if (result < ONE_HUNDRED_CLOUDS) {
+            return TOTAL_BILL_CLOUDS.formatted(result);
+        } else {
+            int aws = result / 100;
+            int clouds = result % 100;
+            return TOTAL_BILL_AWS_CLOUDS.formatted(aws, clouds);
+        }
+    }
+
+    //TODO
+    private void initializeDealStrategies() {
+        for (DealStrategy dealStrategy : dealStrategies) {
+            dealStrategy.initialize();
+        }
     }
 }

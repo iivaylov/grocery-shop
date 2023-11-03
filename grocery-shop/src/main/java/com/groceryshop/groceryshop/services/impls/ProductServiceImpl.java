@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -93,7 +92,7 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProduct(int productId, UserDTO userDTO) {
         Product product = productDAO.selectProductById(productId)
                 .orElseThrow(() -> new GroceryEntityNotFoundException(
-                PRODUCT_ID_NOT_FOUND.formatted(productId)
+                        PRODUCT_ID_NOT_FOUND.formatted(productId)
                 ));
 
         //TODO: Check user permission

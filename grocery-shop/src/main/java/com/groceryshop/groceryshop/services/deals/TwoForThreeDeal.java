@@ -1,38 +1,55 @@
 package com.groceryshop.groceryshop.services.deals;
 
 import com.groceryshop.groceryshop.models.Product;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.stereotype.Component;
 
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
 
+@Component
+@Getter
+@Setter
 public class TwoForThreeDeal implements DealStrategy {
-    private static final int MIN_PRODUCTS_FOR_DEAL = 3;
-    private final List<Product> eligibleProducts;
 
-    public TwoForThreeDeal(List<Product> eligibleProducts) {
-        this.eligibleProducts = eligibleProducts;
-    }
+    public static final int THREE_PRODUCTS = 3;
+
+    private final List<Product> eligibleProducts = new ArrayList<>();
 
     @Override
-    public void applyDeal(
-            List<Product> products,
-            Map<Product, Integer> priceList,
-            Map<Product, Integer> productCount) {
+    public int applyDeals(List<Product> shoppingList) {
+        Map<Product, Integer> productFrequency = new HashMap<>();
 
-        PriorityQueue<Product> eligibleProductsQueue = new PriorityQueue<>(Comparator.comparingInt(priceList::get));
-
-        for (Product product : products) {
+        for (Product product : shoppingList) {
             if (eligibleProducts.contains(product)) {
-                eligibleProductsQueue.offer(product);
+                productFrequency.put(product, productFrequency.getOrDefault(product, 0) + 1);
             }
         }
 
-        while (eligibleProductsQueue.size() >= MIN_PRODUCTS_FOR_DEAL) {
-            eligibleProductsQueue.poll();
-            productCount.put(eligibleProductsQueue.poll(), productCount.get(eligibleProductsQueue.poll()) - 1);
-            productCount.put(eligibleProductsQueue.poll(), productCount.get(eligibleProductsQueue.poll()) - 1);
+        int totalDiscount = 0;
+
+        for (Product product : eligibleProducts) {
+            Integer count = productFrequency.getOrDefault(product, 0);
+            if (count >= THREE_PRODUCTS) {
+                int dealCount = count / THREE_PRODUCTS;
+                int discountAmount = product.getPrice() * dealCount;
+                totalDiscount += discountAmount;
+                productFrequency.put(product, count - dealCount * THREE_PRODUCTS);
+            }
         }
+
+        return totalDiscount;
+    }
+
+    @Override
+    public void initialize() {
+        //TODO - hard coded products
+        eligibleProducts.add(new Product("apple", 50));
+        eligibleProducts.add(new Product("banana", 40));
+        eligibleProducts.add(new Product("tomato", 30));
     }
 }
+

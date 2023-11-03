@@ -73,7 +73,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public void addProductToShoppingList(int userId, int productId) {
         User user = getUserFromRepository(userId);
-        Product product = productDAO.selectProductById(productId).orElseThrow();
+
+        Product product = productDAO.selectProductById(productId)
+                .orElseThrow(() -> new GroceryEntityNotFoundException(
+                        PRODUCT_ID_NOT_FOUND.formatted(productId)
+                ));
+
         user.getShoppingList().add(product);
         userDAO.updateUser(user);
     }
