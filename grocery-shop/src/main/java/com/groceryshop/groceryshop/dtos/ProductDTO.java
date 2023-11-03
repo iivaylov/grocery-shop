@@ -6,7 +6,6 @@ public record ProductDTO(
         String name,
         int price
 ) {
-
     public Product toProduct() {
         return Product.builder()
                 .name(name)

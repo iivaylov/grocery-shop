@@ -12,8 +12,6 @@ public interface ProductService {
 
     ProductDTO getProductById(int productId);
 
-//    ProductDTO getProductByName(String name);
-
     ProductDTO createProduct(ProductRequest productRequest, UserDTO userDTO);
 
     ProductDTO updateProduct(ProductRequest productRequest, UserDTO userDTO);
