@@ -19,7 +19,7 @@ public class Product {
     @Column(name = "product_id")
     private int id;
 
-    @Column(name = "name")
+    @Column(name = "name", unique = true)
     private String name;
 
     @Column(name = "price")
