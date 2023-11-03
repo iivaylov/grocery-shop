@@ -4,8 +4,11 @@ import com.groceryshop.groceryshop.models.Product;
 import com.groceryshop.groceryshop.repositories.ProductDAO;
 import com.groceryshop.groceryshop.repositories.jpa.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -19,8 +22,19 @@ public class ProductJPADataAccessService implements ProductDAO {
     }
 
     @Override
+    public List<Product> selectAllProducts() {
+        Page<Product> pageProducts = productRepository.findAll(Pageable.ofSize(30));
+        return pageProducts.getContent();
+    }
+
+    @Override
     public Optional<Product> selectProductById(int productId) {
         return productRepository.findById(productId);
+    }
+
+    @Override
+    public Optional<Product> selectProductByName(String name) {
+        return Optional.empty();
     }
 
     @Override

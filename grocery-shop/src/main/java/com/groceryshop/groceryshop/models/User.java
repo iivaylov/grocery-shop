@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Objects;
 
 @Data
 @Builder
@@ -32,9 +33,6 @@ public class User {
     @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "email")
-    private String email;
-
     @Column(name = "is_admin")
     private boolean isAdmin;
 
@@ -45,4 +43,17 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "product_id")
     )
     private List<Product> shoppingList;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return id == user.id && Objects.equals(username, user.username);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, username);
+    }
 }

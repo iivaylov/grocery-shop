@@ -1,8 +1,10 @@
 package com.groceryshop.groceryshop.services;
 
-import com.groceryshop.groceryshop.dtos.UserDTO;
+import com.groceryshop.groceryshop.dtos.ProductDTO;
+
+import java.util.List;
 
 public interface TillService {
 
-    String calculateUserBill(UserDTO userDTO);
+    String calculateUserBill(List<ProductDTO> productsDTOs);
 }
