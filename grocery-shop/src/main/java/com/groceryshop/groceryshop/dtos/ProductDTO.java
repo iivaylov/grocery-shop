@@ -1,7 +1,8 @@
 package com.groceryshop.groceryshop.dtos;
 
 import com.groceryshop.groceryshop.models.Product;
-
+import lombok.Builder;
+@Builder
 public record ProductDTO(
         String name,
         int price

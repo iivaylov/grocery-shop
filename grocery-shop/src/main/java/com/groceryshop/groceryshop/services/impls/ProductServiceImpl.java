@@ -98,6 +98,5 @@ public class ProductServiceImpl implements ProductService {
         //TODO: Check user permission
 
         productDAO.deleteProduct(product);
-
     }
 }
