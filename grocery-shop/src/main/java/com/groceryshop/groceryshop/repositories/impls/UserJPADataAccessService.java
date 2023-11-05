@@ -1,6 +1,6 @@
 package com.groceryshop.groceryshop.repositories.impls;
 
-import com.groceryshop.groceryshop.models.User;
+import com.groceryshop.groceryshop.models.UserEntity;
 import com.groceryshop.groceryshop.repositories.UserDAO;
 import com.groceryshop.groceryshop.repositories.jpa.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +19,12 @@ public class UserJPADataAccessService implements UserDAO {
     }
 
     @Override
-    public Optional<User> selectUserById(int userId) {
+    public Optional<UserEntity> selectUserById(int userId) {
         return userRepository.findById(userId);
     }
 
     @Override
-    public Optional<User> selectUserByUsername(String username) {
+    public Optional<UserEntity> selectUserByUsername(String username) {
         return userRepository.findAll()
                 .stream()
                 .filter(user -> user.getUsername().equals(username))
@@ -32,17 +32,17 @@ public class UserJPADataAccessService implements UserDAO {
     }
 
     @Override
-    public void insertUser(User user) {
-        userRepository.save(user);
+    public void insertUser(UserEntity userEntity) {
+        userRepository.save(userEntity);
     }
 
     @Override
-    public void updateUser(User user) {
-        userRepository.save(user);
+    public void updateUser(UserEntity userEntity) {
+        userRepository.save(userEntity);
     }
 
     @Override
-    public void deleteUser(User user) {
-        userRepository.delete(user);
+    public void deleteUser(UserEntity userEntity) {
+        userRepository.delete(userEntity);
     }
 }

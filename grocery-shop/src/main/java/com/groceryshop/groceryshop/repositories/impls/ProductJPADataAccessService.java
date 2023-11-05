@@ -1,6 +1,6 @@
 package com.groceryshop.groceryshop.repositories.impls;
 
-import com.groceryshop.groceryshop.models.Product;
+import com.groceryshop.groceryshop.models.ProductEntity;
 import com.groceryshop.groceryshop.repositories.ProductDAO;
 import com.groceryshop.groceryshop.repositories.jpa.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,33 +22,33 @@ public class ProductJPADataAccessService implements ProductDAO {
     }
 
     @Override
-    public List<Product> selectAllProducts() {
-        Page<Product> pageProducts = productRepository.findAll(Pageable.ofSize(30));
+    public List<ProductEntity> selectAllProducts() {
+        Page<ProductEntity> pageProducts = productRepository.findAll(Pageable.ofSize(30));
         return pageProducts.getContent();
     }
 
     @Override
-    public Optional<Product> selectProductById(int productId) {
+    public Optional<ProductEntity> selectProductById(int productId) {
         return productRepository.findById(productId);
     }
 
     @Override
-    public Optional<Product> selectProductByName(String name) {
-        return Optional.empty();
+    public Optional<ProductEntity> selectProductByName(String name) {
+        return productRepository.findProductEntityByName(name);
     }
 
     @Override
-    public void insertProduct(Product product) {
-        productRepository.save(product);
+    public void insertProduct(ProductEntity productEntity) {
+        productRepository.save(productEntity);
     }
 
     @Override
-    public void updateProduct(Product product) {
-        productRepository.save(product);
+    public void updateProduct(ProductEntity productEntity) {
+        productRepository.save(productEntity);
     }
 
     @Override
-    public void deleteProduct(Product product) {
-        productRepository.delete(product);
+    public void deleteProduct(ProductEntity productEntity) {
+        productRepository.delete(productEntity);
     }
 }

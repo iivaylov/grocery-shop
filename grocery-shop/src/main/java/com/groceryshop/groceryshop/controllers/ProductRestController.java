@@ -7,7 +7,7 @@ import com.groceryshop.groceryshop.exceptions.GroceryEntityNotFoundException;
 import com.groceryshop.groceryshop.services.ProductService;
 import com.groceryshop.groceryshop.utils.AuthenticationHelper;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.Data;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Data
 @RestController
 @RequestMapping("/api/v1/products")
 public class ProductRestController {
@@ -24,12 +25,6 @@ public class ProductRestController {
     private final ProductService productService;
     private final AuthenticationHelper authenticationHelper;
 
-    @Autowired
-    public ProductRestController(ProductService productService, AuthenticationHelper authenticationHelper) {
-        this.productService = productService;
-        this.authenticationHelper = authenticationHelper;
-    }
-
     @GetMapping
     public ResponseEntity<List<ProductDTO>> getProducts() {
         List<ProductDTO> products = productService.getAllProducts();
@@ -37,8 +32,7 @@ public class ProductRestController {
     }
 
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductDTO> getProduct(
-            @PathVariable int productId) {
+    public ResponseEntity<ProductDTO> getProduct(@PathVariable int productId) {
         ProductDTO product = productService.getProductById(productId);
         return new ResponseEntity<>(product, HttpStatus.OK);
     }

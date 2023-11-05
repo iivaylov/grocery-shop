@@ -5,7 +5,8 @@ import com.groceryshop.groceryshop.dtos.UserDTO;
 import com.groceryshop.groceryshop.exceptions.GroceryAuthorizationException;
 import com.groceryshop.groceryshop.services.UserService;
 import com.groceryshop.groceryshop.utils.AuthenticationHelper;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Data
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserRestController {
@@ -23,18 +26,13 @@ public class UserRestController {
     private final UserService userService;
     private final AuthenticationHelper authenticationHelper;
 
-    @Autowired
-    public UserRestController(
-            UserService userService,
-            AuthenticationHelper authenticationHelper) {
-        this.userService = userService;
-        this.authenticationHelper = authenticationHelper;
-    }
-
     @GetMapping("/{userId}")
-    public ResponseEntity<UserDTO> get(
-            @RequestHeader HttpHeaders headers,
-            @PathVariable int userId) {
+    public ResponseEntity<UserDTO> get(@RequestHeader HttpHeaders headers, @PathVariable int userId) {
+
+        log.info("UserRestController get()");
+        log.info("UserRestController get() userId: " + userId);
+        log.info("UserRestController get() headers: " + headers);
+
         UserDTO currentUser = authenticationHelper.tryGetUser(headers);
         checkAccessPermissions(userId, currentUser);
         UserDTO userToReturn = userService.getUserById(userId);

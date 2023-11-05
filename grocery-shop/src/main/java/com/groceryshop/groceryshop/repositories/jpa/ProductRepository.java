@@ -1,7 +1,10 @@
 package com.groceryshop.groceryshop.repositories.jpa;
 
-import com.groceryshop.groceryshop.models.Product;
+import com.groceryshop.groceryshop.models.ProductEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ProductRepository extends JpaRepository<Product, Integer> {
+import java.util.Optional;
+
+public interface ProductRepository extends JpaRepository<ProductEntity, Integer> {
+    Optional<ProductEntity> findProductEntityByName(String name);
 }

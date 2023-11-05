@@ -5,7 +5,7 @@ import com.groceryshop.groceryshop.dtos.ProductDTO;
 import com.groceryshop.groceryshop.dtos.UserDTO;
 import com.groceryshop.groceryshop.exceptions.GroceryDuplicateEntityException;
 import com.groceryshop.groceryshop.exceptions.GroceryEntityNotFoundException;
-import com.groceryshop.groceryshop.models.Product;
+import com.groceryshop.groceryshop.models.ProductEntity;
 import com.groceryshop.groceryshop.repositories.ProductDAO;
 import com.groceryshop.groceryshop.services.impls.ProductServiceImpl;
 import com.groceryshop.groceryshop.services.mappers.ProductDTOMapper;
@@ -24,7 +24,7 @@ import static com.groceryshop.groceryshop.Helpers.*;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
-class ProductServiceImplTests {
+class ProductEntityServiceImplTests {
 
     @Mock
     ProductDAO mockProductDAO;
@@ -38,17 +38,17 @@ class ProductServiceImplTests {
     @Test
     void get_Should_ReturnProduct_When_MatchByIdExist() {
         // Arrange
-        Product mockProduct = createMockProduct();
+        ProductEntity mockProductEntity = createMockProduct();
         ProductDTO mockProductDTO = createMockProductDTO();
 
         Mockito.when(mockProductDAO.selectProductById(Mockito.anyInt()))
-                .thenReturn(Optional.of(mockProduct));
+                .thenReturn(Optional.of(mockProductEntity));
 
-        Mockito.when(mockProductDTOMapper.apply(mockProduct))
+        Mockito.when(mockProductDTOMapper.apply(mockProductEntity))
                 .thenReturn(mockProductDTO);
 
         // Act
-        ProductDTO result = service.getProductById(mockProduct.getId());
+        ProductDTO result = service.getProductById(mockProductEntity.getId());
 
         // Assert
         Assertions.assertEquals(mockProductDTO, result);
@@ -57,17 +57,17 @@ class ProductServiceImplTests {
     @Test
     void getAllProducts_Should_ReturnListOfProductDTOs() {
         // Arrange
-        Product product1 = new Product("Apple", 10);
-        Product product2 = new Product("Banana", 75);
-        List<Product> productList = List.of(product1, product2);
-        List<ProductDTO> productDTOList = productList.stream()
+        ProductEntity productEntity1 = new ProductEntity(1, "Apple", 10, null);
+        ProductEntity productEntity2 = new ProductEntity(2, "Banana", 75, null);
+        List<ProductEntity> productEntityList = List.of(productEntity1, productEntity2);
+        List<ProductDTO> productDTOList = productEntityList.stream()
                 .map(product -> new ProductDTO(product.getName(), product.getPrice()))
                 .toList();
 
-        Mockito.when(mockProductDAO.selectAllProducts()).thenReturn(productList);
-        Mockito.when(mockProductDTOMapper.apply(any(Product.class))).thenAnswer(invocation -> {
-            Product product = invocation.getArgument(0);
-            return new ProductDTO(product.getName(), product.getPrice());
+        Mockito.when(mockProductDAO.selectAllProducts()).thenReturn(productEntityList);
+        Mockito.when(mockProductDTOMapper.apply(any(ProductEntity.class))).thenAnswer(invocation -> {
+            ProductEntity productEntity = invocation.getArgument(0);
+            return new ProductDTO(productEntity.getName(), productEntity.getPrice());
         });
 
         // Act
@@ -84,7 +84,7 @@ class ProductServiceImplTests {
 
         // Optionally, you can also verify the interaction:
         Mockito.verify(mockProductDAO).selectAllProducts();
-        Mockito.verify(mockProductDTOMapper, Mockito.times(productList.size())).apply(any(Product.class));
+        Mockito.verify(mockProductDTOMapper, Mockito.times(productEntityList.size())).apply(any(ProductEntity.class));
     }
 
     @Test
@@ -97,14 +97,14 @@ class ProductServiceImplTests {
         Mockito.when(mockProductDAO.selectProductByName(productRequest.getName()))
                 .thenReturn(Optional.empty());
 
-        Mockito.when(mockProductDTOMapper.apply(any(Product.class)))
+        Mockito.when(mockProductDTOMapper.apply(any(ProductEntity.class)))
                 .thenReturn(mockProductDTO);
 
         //Act
         ProductDTO result = service.createProduct(productRequest, userDTO);
 
         //Assert
-        Mockito.verify(mockProductDAO).insertProduct(any(Product.class));
+        Mockito.verify(mockProductDAO).insertProduct(any(ProductEntity.class));
         Assertions.assertEquals(mockProductDTO, result);
     }
 
@@ -113,9 +113,9 @@ class ProductServiceImplTests {
         // Arrange
         ProductRequest productRequest = createMockProductRequest();
         UserDTO userDTO = createMockUserDTO();
-        Product existingProduct = createMockProduct();
+        ProductEntity existingProductEntity = createMockProduct();
 
-        Mockito.when(mockProductDAO.selectProductByName(productRequest.getName())).thenReturn(Optional.of(existingProduct));
+        Mockito.when(mockProductDAO.selectProductByName(productRequest.getName())).thenReturn(Optional.of(existingProductEntity));
 
         //Act & Assert
         Assertions.assertThrows(
@@ -128,17 +128,17 @@ class ProductServiceImplTests {
         // Arrange
         ProductRequest productRequest = createMockProductRequest();
         UserDTO userDTO = createMockUserDTO();
-        Product existingProduct = createMockProduct();
+        ProductEntity existingProductEntity = createMockProduct();
         ProductDTO expectedProductDTO = createMockProductDTO();
 
-        Mockito.when(mockProductDAO.selectProductByName(productRequest.getName())).thenReturn(Optional.of(existingProduct));
-        Mockito.when(mockProductDTOMapper.apply(any(Product.class))).thenReturn(expectedProductDTO);
+        Mockito.when(mockProductDAO.selectProductByName(productRequest.getName())).thenReturn(Optional.of(existingProductEntity));
+        Mockito.when(mockProductDTOMapper.apply(any(ProductEntity.class))).thenReturn(expectedProductDTO);
 
         // Act
         ProductDTO actualProductDTO = service.updateProduct(productRequest, userDTO);
 
         // Assert
-        Mockito.verify(mockProductDAO).updateProduct(any(Product.class));
+        Mockito.verify(mockProductDAO).updateProduct(any(ProductEntity.class));
         Assertions.assertEquals(expectedProductDTO, actualProductDTO);
     }
 
@@ -160,15 +160,15 @@ class ProductServiceImplTests {
     void deleteProduct_Should_DeleteProduct_When_ProductExists() {
         // Arrange
         int productId = 1;
-        Product mockProduct = createMockProduct();
+        ProductEntity mockProductEntity = createMockProduct();
         UserDTO userDTO = createMockUserDTO();
-        Mockito.when(mockProductDAO.selectProductById(productId)).thenReturn(Optional.of(mockProduct));
+        Mockito.when(mockProductDAO.selectProductById(productId)).thenReturn(Optional.of(mockProductEntity));
 
         // Act
         service.deleteProduct(productId, userDTO);
 
         // Assert
-        Mockito.verify(mockProductDAO).deleteProduct(mockProduct);
+        Mockito.verify(mockProductDAO).deleteProduct(mockProductEntity);
     }
 
     @Test

@@ -5,7 +5,7 @@ import com.groceryshop.groceryshop.dtos.ProductDTO;
 import com.groceryshop.groceryshop.dtos.UserDTO;
 import com.groceryshop.groceryshop.exceptions.GroceryDuplicateEntityException;
 import com.groceryshop.groceryshop.exceptions.GroceryEntityNotFoundException;
-import com.groceryshop.groceryshop.models.Product;
+import com.groceryshop.groceryshop.models.ProductEntity;
 import com.groceryshop.groceryshop.repositories.ProductDAO;
 import com.groceryshop.groceryshop.services.ProductService;
 import com.groceryshop.groceryshop.services.mappers.ProductDTOMapper;
@@ -51,7 +51,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO createProduct(ProductRequest productRequest, UserDTO userDTO) {
-        Optional<Product> existingProduct = productDAO.selectProductByName(productRequest.getName());
+        Optional<ProductEntity> existingProduct = productDAO.selectProductByName(productRequest.getName());
 
         //TODO: Check user permission
 
@@ -59,23 +59,23 @@ public class ProductServiceImpl implements ProductService {
             throw new GroceryDuplicateEntityException(PRODUCT_ALREADY_EXISTS.formatted(productRequest.getName()));
         }
 
-        Product product = Product.builder()
+        ProductEntity productEntity = ProductEntity.builder()
                 .name(productRequest.getName())
                 .price(productRequest.getPrice())
                 .build();
 
-        productDAO.insertProduct(product);
+        productDAO.insertProduct(productEntity);
 
-        return productDTOMapper.apply(product);
+        return productDTOMapper.apply(productEntity);
     }
 
     @Override
     public ProductDTO updateProduct(ProductRequest productRequest, UserDTO userDTO) {
-        Optional<Product> existingProduct = productDAO.selectProductByName(productRequest.getName());
+        Optional<ProductEntity> existingProduct = productDAO.selectProductByName(productRequest.getName());
 
         //TODO: Check user permission
 
-        Product updatedProduct = existingProduct.map(product -> {
+        ProductEntity updatedProductEntity = existingProduct.map(product -> {
             product.setName(productRequest.getName());
             product.setPrice(productRequest.getPrice());
 
@@ -85,18 +85,18 @@ public class ProductServiceImpl implements ProductService {
                 PRODUCT_NAME_NOT_FOUND.formatted(productRequest.getName())
         ));
 
-        return productDTOMapper.apply(updatedProduct);
+        return productDTOMapper.apply(updatedProductEntity);
     }
 
     @Override
     public void deleteProduct(int productId, UserDTO userDTO) {
-        Product product = productDAO.selectProductById(productId)
+        ProductEntity productEntity = productDAO.selectProductById(productId)
                 .orElseThrow(() -> new GroceryEntityNotFoundException(
                         PRODUCT_ID_NOT_FOUND.formatted(productId)
                 ));
 
         //TODO: Check user permission
 
-        productDAO.deleteProduct(product);
+        productDAO.deleteProduct(productEntity);
     }
 }

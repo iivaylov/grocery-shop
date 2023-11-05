@@ -1,15 +1,18 @@
 package com.groceryshop.groceryshop.services.impls;
 
 import com.groceryshop.groceryshop.dtos.ProductDTO;
-import com.groceryshop.groceryshop.models.Product;
+import com.groceryshop.groceryshop.models.ProductEntity;
+import com.groceryshop.groceryshop.repositories.ProductDAO;
 import com.groceryshop.groceryshop.services.TillService;
-import com.groceryshop.groceryshop.services.deals.DealStrategy;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.groceryshop.groceryshop.services.deals.DealStrategyHandler;
+import lombok.Data;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+@Data
 @Service
 public class TillServiceImpl implements TillService {
 
@@ -18,49 +21,9 @@ public class TillServiceImpl implements TillService {
     public static final int MIN_PRODUCTS = 3;
     public static final String TOTAL_BILL_CLOUDS = "Total bill: %s clouds";
     public static final int ONE_HUNDRED_CLOUDS = 100;
-    private final List<DealStrategy> dealStrategies;
 
-    @Autowired
-    public TillServiceImpl(List<DealStrategy> dealStrategies) {
-        this.dealStrategies = dealStrategies;
-        initializeDealStrategies();
-    }
-
-    @Override
-    public String calculateUserBill(List<ProductDTO> productsDTOs) {
-        List<Product> products = productsDTOs.stream()
-                .map(ProductDTO::toProduct)
-                .toList();
-
-        if (products.isEmpty()) {
-            return NO_PRODUCTS;
-        }
-
-        if (products.size() < MIN_PRODUCTS) {
-            int result = products.stream()
-                    .mapToInt(Product::getPrice)
-                    .sum();
-            return calculateResult(result);
-        }
-
-        return calculateUserBillWithDeals(products);
-    }
-
-    public String calculateUserBillWithDeals(List<Product> products) {
-        List<Product> shoppingList = new ArrayList<>(products);
-        int totalDiscount = 0;
-
-        for (DealStrategy dealStrategy : dealStrategies) {
-            totalDiscount += dealStrategy.applyDeals(shoppingList);
-        }
-
-        int totalAmountBeforeDiscount = shoppingList.stream()
-                .mapToInt(Product::getPrice)
-                .sum();
-        int finalAmount = totalAmountBeforeDiscount - totalDiscount;
-
-        return calculateResult(finalAmount);
-    }
+    private final List<DealStrategyHandler> dealStrategies;
+    private final ProductDAO productDAO;
 
     private static String calculateResult(int result) {
         if (result < ONE_HUNDRED_CLOUDS) {
@@ -72,10 +35,49 @@ public class TillServiceImpl implements TillService {
         }
     }
 
-    //TODO
-    private void initializeDealStrategies() {
-        for (DealStrategy dealStrategy : dealStrategies) {
-            dealStrategy.initialize();
+    @Override
+    public String calculateUserBill(List<ProductDTO> productsDTOs) {
+        List<String> productNames = productsDTOs.stream()
+                .map(ProductDTO::name)
+                .toList();
+
+        List<ProductEntity> productEntities = new ArrayList<>();
+
+        for (String productName : productNames) {
+            Optional<ProductEntity> productEntity = productDAO.selectProductByName(productName);
+
+            productEntity.ifPresent(productEntities::add);
         }
+
+        if (productEntities.isEmpty()) {
+            return NO_PRODUCTS;
+        }
+
+        if (productEntities.size() < MIN_PRODUCTS) {
+            int result = productEntities.stream()
+                    .mapToInt(ProductEntity::getPrice)
+                    .sum();
+            return calculateResult(result);
+        }
+
+        return calculateUserBillWithDeals(productEntities);
+    }
+
+    public String calculateUserBillWithDeals(List<ProductEntity> productEntities) {
+        List<ProductEntity> shoppingList = new ArrayList<>(productEntities);
+        int totalDiscount = 0;
+
+        for (DealStrategyHandler dealStrategyHandler : dealStrategies) {
+            totalDiscount += dealStrategyHandler.getDiscountedAmount(shoppingList);
+        }
+
+        int totalAmountBeforeDiscount = shoppingList
+                .stream()
+                .mapToInt(ProductEntity::getPrice)
+                .sum();
+
+        int finalAmount = totalAmountBeforeDiscount - totalDiscount;
+
+        return calculateResult(finalAmount);
     }
 }

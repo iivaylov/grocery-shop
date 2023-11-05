@@ -1,18 +1,18 @@
 package com.groceryshop.groceryshop.services.mappers;
 
 import com.groceryshop.groceryshop.dtos.ProductDTO;
-import com.groceryshop.groceryshop.models.Product;
+import com.groceryshop.groceryshop.models.ProductEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Function;
 
 @Service
-public class ProductDTOMapper implements Function<Product, ProductDTO> {
+public class ProductDTOMapper implements Function<ProductEntity, ProductDTO> {
     @Override
-    public ProductDTO apply(Product product) {
+    public ProductDTO apply(ProductEntity productEntity) {
         return new ProductDTO(
-                product.getName(),
-                product.getPrice()
+                productEntity.getName(),
+                productEntity.getPrice()
         );
     }
 }

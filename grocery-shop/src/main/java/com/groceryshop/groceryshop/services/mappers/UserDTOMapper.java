@@ -1,20 +1,20 @@
 package com.groceryshop.groceryshop.services.mappers;
 
 import com.groceryshop.groceryshop.dtos.UserDTO;
-import com.groceryshop.groceryshop.models.User;
+import com.groceryshop.groceryshop.models.UserEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Function;
 
 @Service
-public class UserDTOMapper implements Function<User, UserDTO> {
+public class UserDTOMapper implements Function<UserEntity, UserDTO> {
     @Override
-    public UserDTO apply(User user) {
+    public UserDTO apply(UserEntity userEntity) {
         return new UserDTO(
-                user.getId(),
-                user.getUsername(),
-                user.getFirstName(),
-                user.getLastName()
+                userEntity.getId(),
+                userEntity.getUsername(),
+                userEntity.getFirstName(),
+                userEntity.getLastName()
         );
     }
 }

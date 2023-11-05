@@ -1,18 +1,18 @@
 package com.groceryshop.groceryshop.repositories;
 
-import com.groceryshop.groceryshop.models.User;
+import com.groceryshop.groceryshop.models.UserEntity;
 
 import java.util.Optional;
 
 public interface UserDAO {
 
-    Optional<User> selectUserById(int userId);
+    Optional<UserEntity> selectUserById(int userId);
 
-    Optional<User> selectUserByUsername(String username);
+    Optional<UserEntity> selectUserByUsername(String username);
 
-    void insertUser(User user);
+    void insertUser(UserEntity userEntity);
 
-    void updateUser(User user);
+    void updateUser(UserEntity userEntity);
 
-    void deleteUser(User user);
+    void deleteUser(UserEntity userEntity);
 }
