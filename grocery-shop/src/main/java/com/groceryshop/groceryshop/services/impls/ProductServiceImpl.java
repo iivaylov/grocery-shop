@@ -2,35 +2,31 @@ package com.groceryshop.groceryshop.services.impls;
 
 import com.groceryshop.groceryshop.controllers.requests.ProductRequest;
 import com.groceryshop.groceryshop.dtos.ProductDTO;
-import com.groceryshop.groceryshop.dtos.UserDTO;
 import com.groceryshop.groceryshop.exceptions.GroceryDuplicateEntityException;
 import com.groceryshop.groceryshop.exceptions.GroceryEntityNotFoundException;
 import com.groceryshop.groceryshop.models.ProductEntity;
 import com.groceryshop.groceryshop.repositories.ProductDAO;
 import com.groceryshop.groceryshop.services.ProductService;
 import com.groceryshop.groceryshop.services.mappers.ProductDTOMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.groceryshop.groceryshop.utils.AuthenticationHelper;
+import lombok.Data;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
+@Data
 @Service
 public class ProductServiceImpl implements ProductService {
+    public static final String PRODUCT_ERROR_MSG = "Product with the provided name does not match the existing one.";
 
     public static final String PRODUCT_ID_NOT_FOUND = "Product with id [%s] not found.";
     public static final String PRODUCT_NAME_NOT_FOUND = "Product named [%s] not found.";
     public static final String PRODUCT_ALREADY_EXISTS = "Product named [%s] already exists.";
     private final ProductDAO productDAO;
     private final ProductDTOMapper productDTOMapper;
-
-    @Autowired
-    public ProductServiceImpl(
-            ProductDAO productDAO,
-            ProductDTOMapper productDTOMapper) {
-        this.productDAO = productDAO;
-        this.productDTOMapper = productDTOMapper;
-    }
+    private AuthenticationHelper authenticationHelper;
 
     @Override
     public List<ProductDTO> getAllProducts() {
@@ -50,10 +46,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductDTO createProduct(ProductRequest productRequest, UserDTO userDTO) {
+    public ProductDTO createProduct(HttpHeaders headers, ProductRequest productRequest) {
         Optional<ProductEntity> existingProduct = productDAO.selectProductByName(productRequest.getName());
-
-        //TODO: Check user permission
 
         if (existingProduct.isPresent()) {
             throw new GroceryDuplicateEntityException(PRODUCT_ALREADY_EXISTS.formatted(productRequest.getName()));
@@ -70,10 +64,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductDTO updateProduct(ProductRequest productRequest, UserDTO userDTO) {
+    public ProductDTO updateProduct(HttpHeaders headers, int productId, ProductRequest productRequest) {
         Optional<ProductEntity> existingProduct = productDAO.selectProductByName(productRequest.getName());
 
-        //TODO: Check user permission
+        ensureProductNamesMatch(productRequest, productId);
 
         ProductEntity updatedProductEntity = existingProduct.map(product -> {
             product.setName(productRequest.getName());
@@ -89,14 +83,19 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void deleteProduct(int productId, UserDTO userDTO) {
+    public void deleteProduct(HttpHeaders headers, int productId) {
         ProductEntity productEntity = productDAO.selectProductById(productId)
                 .orElseThrow(() -> new GroceryEntityNotFoundException(
                         PRODUCT_ID_NOT_FOUND.formatted(productId)
                 ));
 
-        //TODO: Check user permission
-
         productDAO.deleteProduct(productEntity);
+    }
+
+    private void ensureProductNamesMatch(ProductRequest productRequest, int productId) {
+        ProductDTO productToUpdate = getProductById(productId);
+        if (!productToUpdate.name().equals(productRequest.getName())) {
+            throw new GroceryEntityNotFoundException(PRODUCT_ERROR_MSG);
+        }
     }
 }

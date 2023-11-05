@@ -2,9 +2,7 @@ package com.groceryshop.groceryshop.controllers;
 
 import com.groceryshop.groceryshop.dtos.ProductDTO;
 import com.groceryshop.groceryshop.dtos.UserDTO;
-import com.groceryshop.groceryshop.exceptions.GroceryAuthorizationException;
 import com.groceryshop.groceryshop.services.UserService;
-import com.groceryshop.groceryshop.utils.AuthenticationHelper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -19,23 +17,41 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserRestController {
-    public static final String ERROR_MESSAGE = "You are not authorized to browse user information.";
     public static final String ADD_PRODUCT_MSG = "You have successfully added the product to your shopping list.";
     public static final String REMOVE_PRODUCT_MSG = "You have successfully removed this item from your shopping list.";
 
+    public static final String GET_METHOD_CALLED_WITH_HEADERS =
+            "UserRestController.get() called with headers: {}";
+    public static final String GET_METHOD_CALLED_WITH_USER_ID =
+            "UserRestController.get() called with userId: {}";
+    public static final String GET_SHOPPING_LIST_CALLED_WITH_HEADERS =
+            "UserRestController.getShoppingList() called with headers: {}";
+    public static final String GET_SHOPPING_LIST_CALLED_WITH_USER_ID =
+            "UserRestController.getShoppingList() called with userId: {}";
+    public static final String ADD_TO_SHOPPING_LIST_CALLED_WITH_HEADERS =
+            "UserRestController.addToShoppingList() called with headers: {}";
+    public static final String ADD_TO_SHOPPING_LIST_CALLED_WITH_USER_ID =
+            "UserRestController.addToShoppingList() called with userId: {}";
+    public static final String ADD_TO_SHOPPING_LIST_CALLED_WITH_PRODUCT_ID =
+            "UserRestController.addToShoppingList() called with productId: {}";
+    public static final String REMOVE_FROM_SHOPPING_LIST_CALLED_WITH_HEADERS =
+            "UserRestController.removeFromShoppingList() called with headers: {}";
+    public static final String REMOVE_FROM_SHOPPING_LIST_CALLED_WITH_USER_ID =
+            "UserRestController.removeFromShoppingList() called with userId: {}";
+    public static final String REMOVE_FROM_SHOPPING_LIST_CALLED_WITH_PRODUCT_ID =
+            "UserRestController.removeFromShoppingList() called with productId: {}";
+
     private final UserService userService;
-    private final AuthenticationHelper authenticationHelper;
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserDTO> get(@RequestHeader HttpHeaders headers, @PathVariable int userId) {
+    public ResponseEntity<UserDTO> get(
+            @RequestHeader HttpHeaders headers,
+            @PathVariable int userId) {
 
-        log.info("UserRestController get()");
-        log.info("UserRestController get() userId: " + userId);
-        log.info("UserRestController get() headers: " + headers);
+        log.info(GET_METHOD_CALLED_WITH_HEADERS, headers);
+        log.info(GET_METHOD_CALLED_WITH_USER_ID, userId);
 
-        UserDTO currentUser = authenticationHelper.tryGetUser(headers);
-        checkAccessPermissions(userId, currentUser);
-        UserDTO userToReturn = userService.getUserById(userId);
+        UserDTO userToReturn = userService.getUserById(headers, userId);
         return new ResponseEntity<>(userToReturn, HttpStatus.OK);
     }
 
@@ -43,9 +59,11 @@ public class UserRestController {
     public ResponseEntity<List<ProductDTO>> getShoppingList(
             @RequestHeader HttpHeaders headers,
             @PathVariable int userId) {
-        UserDTO currentUser = authenticationHelper.tryGetUser(headers);
-        checkAccessPermissions(userId, currentUser);
-        List<ProductDTO> userShoppingList = userService.getUserShoppingList(userId);
+
+        log.info(GET_SHOPPING_LIST_CALLED_WITH_HEADERS, headers);
+        log.info(GET_SHOPPING_LIST_CALLED_WITH_USER_ID, userId);
+
+        List<ProductDTO> userShoppingList = userService.getUserShoppingList(headers, userId);
         return new ResponseEntity<>(userShoppingList, HttpStatus.OK);
     }
 
@@ -54,9 +72,12 @@ public class UserRestController {
             @RequestHeader HttpHeaders headers,
             @PathVariable int userId,
             @PathVariable int productId) {
-        UserDTO currentUser = authenticationHelper.tryGetUser(headers);
-        checkAccessPermissions(userId, currentUser);
-        userService.addProductToShoppingList(userId, productId);
+
+        log.info(ADD_TO_SHOPPING_LIST_CALLED_WITH_HEADERS, headers);
+        log.info(ADD_TO_SHOPPING_LIST_CALLED_WITH_USER_ID, userId);
+        log.info(ADD_TO_SHOPPING_LIST_CALLED_WITH_PRODUCT_ID, productId);
+
+        userService.addProductToShoppingList(headers, userId, productId);
         return new ResponseEntity<>(ADD_PRODUCT_MSG, HttpStatus.CREATED);
     }
 
@@ -65,15 +86,12 @@ public class UserRestController {
             @RequestHeader HttpHeaders headers,
             @PathVariable int userId,
             @PathVariable int productId) {
-        UserDTO currentUser = authenticationHelper.tryGetUser(headers);
-        checkAccessPermissions(userId, currentUser);
-        userService.removeProductFromShoppingList(userId, productId);
-        return new ResponseEntity<>(REMOVE_PRODUCT_MSG, HttpStatus.OK);
-    }
 
-    private static void checkAccessPermissions(int targetUserId, UserDTO executingUser) {
-        if (executingUser.id() != targetUserId) {
-            throw new GroceryAuthorizationException(ERROR_MESSAGE);
-        }
+        log.info(REMOVE_FROM_SHOPPING_LIST_CALLED_WITH_HEADERS, headers);
+        log.info(REMOVE_FROM_SHOPPING_LIST_CALLED_WITH_USER_ID, userId);
+        log.info(REMOVE_FROM_SHOPPING_LIST_CALLED_WITH_PRODUCT_ID, productId);
+
+        userService.removeProductFromShoppingList(headers, userId, productId);
+        return new ResponseEntity<>(REMOVE_PRODUCT_MSG, HttpStatus.OK);
     }
 }

@@ -84,7 +84,9 @@ class ProductEntityServiceImplTests {
 
         // Optionally, you can also verify the interaction:
         Mockito.verify(mockProductDAO).selectAllProducts();
-        Mockito.verify(mockProductDTOMapper, Mockito.times(productEntityList.size())).apply(any(ProductEntity.class));
+
+        Mockito.verify(mockProductDTOMapper, Mockito.times(productEntityList.size()))
+                .apply(any(ProductEntity.class));
     }
 
     @Test
@@ -101,7 +103,7 @@ class ProductEntityServiceImplTests {
                 .thenReturn(mockProductDTO);
 
         //Act
-        ProductDTO result = service.createProduct(productRequest, userDTO);
+        ProductDTO result = service.createProduct(null, productRequest);
 
         //Assert
         Mockito.verify(mockProductDAO).insertProduct(any(ProductEntity.class));
@@ -112,30 +114,31 @@ class ProductEntityServiceImplTests {
     void createProduct_Should_ThrowException_When_ProductNameTaken() {
         // Arrange
         ProductRequest productRequest = createMockProductRequest();
-        UserDTO userDTO = createMockUserDTO();
         ProductEntity existingProductEntity = createMockProduct();
 
-        Mockito.when(mockProductDAO.selectProductByName(productRequest.getName())).thenReturn(Optional.of(existingProductEntity));
+        Mockito.when(mockProductDAO.selectProductByName(productRequest.getName()))
+                .thenReturn(Optional.of(existingProductEntity));
 
         //Act & Assert
         Assertions.assertThrows(
                 GroceryDuplicateEntityException.class,
-                () -> service.createProduct(productRequest, userDTO));
+                () -> service.createProduct(null, productRequest));
     }
 
     @Test
     void updateProduct_Should_UpdateProduct_When_ProductExists() {
         // Arrange
         ProductRequest productRequest = createMockProductRequest();
-        UserDTO userDTO = createMockUserDTO();
         ProductEntity existingProductEntity = createMockProduct();
         ProductDTO expectedProductDTO = createMockProductDTO();
 
-        Mockito.when(mockProductDAO.selectProductByName(productRequest.getName())).thenReturn(Optional.of(existingProductEntity));
+        Mockito.when(mockProductDAO.selectProductByName(productRequest.getName()))
+                .thenReturn(Optional.of(existingProductEntity));
+
         Mockito.when(mockProductDTOMapper.apply(any(ProductEntity.class))).thenReturn(expectedProductDTO);
 
         // Act
-        ProductDTO actualProductDTO = service.updateProduct(productRequest, userDTO);
+        ProductDTO actualProductDTO = service.updateProduct(null, 1, productRequest);
 
         // Assert
         Mockito.verify(mockProductDAO).updateProduct(any(ProductEntity.class));
@@ -146,14 +149,14 @@ class ProductEntityServiceImplTests {
     void updateProduct_Should_ThrowException_When_ProductDoesNotExist() {
         // Arrange
         ProductRequest productRequest = createMockProductRequest();
-        UserDTO userDTO = createMockUserDTO();
 
-        Mockito.when(mockProductDAO.selectProductByName(productRequest.getName())).thenReturn(Optional.empty());
+        Mockito.when(mockProductDAO.selectProductByName(productRequest.getName()))
+                .thenReturn(Optional.empty());
 
         // Act & Assert
         Assertions.assertThrows(
                 GroceryEntityNotFoundException.class,
-                () -> service.updateProduct(productRequest, userDTO));
+                () -> service.updateProduct(null, 1, productRequest));
     }
 
     @Test
@@ -161,11 +164,10 @@ class ProductEntityServiceImplTests {
         // Arrange
         int productId = 1;
         ProductEntity mockProductEntity = createMockProduct();
-        UserDTO userDTO = createMockUserDTO();
         Mockito.when(mockProductDAO.selectProductById(productId)).thenReturn(Optional.of(mockProductEntity));
 
         // Act
-        service.deleteProduct(productId, userDTO);
+        service.deleteProduct(null, productId);
 
         // Assert
         Mockito.verify(mockProductDAO).deleteProduct(mockProductEntity);
@@ -175,13 +177,12 @@ class ProductEntityServiceImplTests {
     void deleteProduct_Should_ThrowException_When_ProductDoesNotExist() {
         // Arrange
         int productId = 1;
-        UserDTO userDTO = createMockUserDTO();
         Mockito.when(mockProductDAO.selectProductById(productId)).thenReturn(Optional.empty());
 
         // Act & Assert
         Assertions.assertThrows(
                 GroceryEntityNotFoundException.class,
-                () -> service.deleteProduct(productId, userDTO));
+                () -> service.deleteProduct(null, productId));
     }
 
 }

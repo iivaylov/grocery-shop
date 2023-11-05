@@ -19,8 +19,6 @@ public class BuyOneGetOneHalfPriceDealHandler implements DealStrategyHandler {
 
     public static final int TWO_PRODUCTS = 2;
 
-    private ProductEntity eligibleProductEntity;
-
     @Override
     public int getDiscountedAmount(List<ProductEntity> shoppingList) {
         Map<ProductEntity, Integer> productsWithDeal = new HashMap<>();

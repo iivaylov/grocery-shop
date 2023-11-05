@@ -1,25 +1,18 @@
 package com.groceryshop.groceryshop.utils;
 
-import com.groceryshop.groceryshop.dtos.UserDTO;
 import com.groceryshop.groceryshop.exceptions.GroceryAuthorizationException;
-import com.groceryshop.groceryshop.services.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.Data;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
+@Data
 @Component
 public class AuthenticationHelper {
     public static final String USER_INFORMATION_IS_MISSING = "User information is missing in the authorization header";
-    private static final String AUTHORIZATION_HEADER_NAME = "Authorization";
-    private static final String INVALID_AUTHENTICATION_ERROR = "Invalid authentication.";
-    private final UserService userService;
+    public static final String INVALID_AUTHENTICATION_ERROR = "Invalid authentication.";
+    public static final String AUTHORIZATION_HEADER_NAME = "Authorization";
 
-    @Autowired
-    public AuthenticationHelper(UserService userService) {
-        this.userService = userService;
-    }
-
-    public UserDTO tryGetUser(HttpHeaders headers) {
+    public Credentials tryGetUser(HttpHeaders headers) {
         if (!headers.containsKey(AUTHORIZATION_HEADER_NAME)) {
             throw new GroceryAuthorizationException(INVALID_AUTHENTICATION_ERROR);
         }
@@ -32,17 +25,7 @@ public class AuthenticationHelper {
 
         String username = getUsername(userInfo);
         String password = getPassword(userInfo);
-        return verifyAuthentication(username, password);
-    }
-
-    public UserDTO verifyAuthentication(String username, String password) {
-        boolean isAuthenticated = userService.authenticate(username, password);
-
-        if (isAuthenticated) {
-            return userService.getUserByUsername(username);
-        } else {
-            throw new GroceryAuthorizationException(INVALID_AUTHENTICATION_ERROR);
-        }
+        return new Credentials(username, password);
     }
 
     private String getUsername(String userInfo) {
@@ -61,5 +44,8 @@ public class AuthenticationHelper {
         }
 
         return userInfo.substring(firstSpace + 1);
+    }
+
+    public record Credentials(String username, String password) {
     }
 }

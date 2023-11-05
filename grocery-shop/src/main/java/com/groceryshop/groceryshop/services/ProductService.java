@@ -2,7 +2,7 @@ package com.groceryshop.groceryshop.services;
 
 import com.groceryshop.groceryshop.controllers.requests.ProductRequest;
 import com.groceryshop.groceryshop.dtos.ProductDTO;
-import com.groceryshop.groceryshop.dtos.UserDTO;
+import org.springframework.http.HttpHeaders;
 
 import java.util.List;
 
@@ -12,11 +12,11 @@ public interface ProductService {
 
     ProductDTO getProductById(int productId);
 
-    ProductDTO createProduct(ProductRequest productRequest, UserDTO userDTO);
+    ProductDTO createProduct(HttpHeaders headers, ProductRequest productRequest);
 
-    ProductDTO updateProduct(ProductRequest productRequest, UserDTO userDTO);
+    ProductDTO updateProduct(HttpHeaders headers, int productId, ProductRequest productRequest);
 
-    void deleteProduct(int productId, UserDTO userDTO);
+    void deleteProduct(HttpHeaders headers, int productId);
 
 
 }

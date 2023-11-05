@@ -4,8 +4,11 @@ import com.groceryshop.groceryshop.dtos.ProductDTO;
 import com.groceryshop.groceryshop.models.ProductEntity;
 import com.groceryshop.groceryshop.repositories.ProductDAO;
 import com.groceryshop.groceryshop.services.TillService;
+import com.groceryshop.groceryshop.services.UserService;
 import com.groceryshop.groceryshop.services.deals.DealStrategyHandler;
+import com.groceryshop.groceryshop.utils.AuthenticationHelper;
 import lombok.Data;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -20,24 +23,18 @@ public class TillServiceImpl implements TillService {
     public static final String NO_PRODUCTS = "No products selected.";
     public static final int MIN_PRODUCTS = 3;
     public static final String TOTAL_BILL_CLOUDS = "Total bill: %s clouds";
-    public static final int ONE_HUNDRED_CLOUDS = 100;
+    public static final int CLOUDS_THRESHOLD = 100;
 
     private final List<DealStrategyHandler> dealStrategies;
+    private final AuthenticationHelper authenticationHelper;
+    private final UserService userService;
     private final ProductDAO productDAO;
 
-    private static String calculateResult(int result) {
-        if (result < ONE_HUNDRED_CLOUDS) {
-            return TOTAL_BILL_CLOUDS.formatted(result);
-        } else {
-            int aws = result / 100;
-            int clouds = result % 100;
-            return TOTAL_BILL_AWS_CLOUDS.formatted(aws, clouds);
-        }
-    }
-
     @Override
-    public String calculateUserBill(List<ProductDTO> productsDTOs) {
-        List<String> productNames = productsDTOs.stream()
+    public String calculateUserBill(HttpHeaders headers) {
+        List<ProductDTO> userShoppingList = userService.getUserShoppingList(headers);
+
+        List<String> productNames = userShoppingList.stream()
                 .map(ProductDTO::name)
                 .toList();
 
@@ -63,7 +60,7 @@ public class TillServiceImpl implements TillService {
         return calculateUserBillWithDeals(productEntities);
     }
 
-    public String calculateUserBillWithDeals(List<ProductEntity> productEntities) {
+    private String calculateUserBillWithDeals(List<ProductEntity> productEntities) {
         List<ProductEntity> shoppingList = new ArrayList<>(productEntities);
         int totalDiscount = 0;
 
@@ -79,5 +76,24 @@ public class TillServiceImpl implements TillService {
         int finalAmount = totalAmountBeforeDiscount - totalDiscount;
 
         return calculateResult(finalAmount);
+    }
+
+    private static String calculateResult(int result) {
+        if (result < CLOUDS_THRESHOLD) {
+            return formatToBillClouds(result);
+        } else {
+            int aws = result / CLOUDS_THRESHOLD;
+            int clouds = result % CLOUDS_THRESHOLD;
+            return formatToBillAwsClouds(aws, clouds);
+        }
+    }
+
+    private static String formatToBillClouds(int result) {
+        return TOTAL_BILL_CLOUDS.formatted(result);
+    }
+
+    private static String formatToBillAwsClouds(int aws, int clouds) {
+        String cloudsStr = clouds < 10 ? "0" + clouds : String.valueOf(clouds);
+        return TOTAL_BILL_AWS_CLOUDS.formatted(aws, cloudsStr);
     }
 }

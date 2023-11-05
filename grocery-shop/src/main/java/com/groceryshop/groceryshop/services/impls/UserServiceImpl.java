@@ -4,6 +4,7 @@ import com.groceryshop.groceryshop.controllers.requests.RegisterUserRequest;
 import com.groceryshop.groceryshop.dtos.ProductDTO;
 import com.groceryshop.groceryshop.dtos.UserDTO;
 import com.groceryshop.groceryshop.exceptions.GroceryAuthenticationException;
+import com.groceryshop.groceryshop.exceptions.GroceryAuthorizationException;
 import com.groceryshop.groceryshop.exceptions.GroceryDuplicateEntityException;
 import com.groceryshop.groceryshop.exceptions.GroceryEntityNotFoundException;
 import com.groceryshop.groceryshop.models.ProductEntity;
@@ -13,15 +14,19 @@ import com.groceryshop.groceryshop.repositories.UserDAO;
 import com.groceryshop.groceryshop.services.UserService;
 import com.groceryshop.groceryshop.services.mappers.ProductDTOMapper;
 import com.groceryshop.groceryshop.services.mappers.UserDTOMapper;
+import com.groceryshop.groceryshop.utils.AuthenticationHelper;
 import lombok.Data;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
-@Data
-public class UserServiceImpl implements UserService {
+import static com.groceryshop.groceryshop.utils.AuthenticationHelper.INVALID_AUTHENTICATION_ERROR;
 
+@Data
+@Service
+public class UserServiceImpl implements UserService {
+    public static final String USER_AUTH_ERROR_MESSAGE = "You are not authorized to browse user information.";
     public static final String USER_ID_NOT_FOUND = "User with id [%s] not found.";
     public static final String PRODUCT_ID_NOT_FOUND = "Product with id [%s] not found.";
     public static final String USER_USERNAME_NOT_FOUND = "User with username [%s] not found.";
@@ -32,9 +37,11 @@ public class UserServiceImpl implements UserService {
     private final ProductDAO productDAO;
     private final ProductDTOMapper productDTOMapper;
     private final UserDTOMapper userDTOMapper;
+    private final AuthenticationHelper authenticationHelper;
 
     @Override
-    public UserDTO getUserById(int userId) {
+    public UserDTO getUserById(HttpHeaders headers, int userId) {
+        authenticateUser(headers, userId);
         return userDAO.selectUserById(userId)
                 .map(userDTOMapper)
                 .orElseThrow(() -> new GroceryEntityNotFoundException(
@@ -43,16 +50,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO getUserByUsername(String username) {
-        return userDAO.selectUserByUsername(username)
-                .map(userDTOMapper)
-                .orElseThrow(() -> new GroceryEntityNotFoundException(
-                        USER_USERNAME_NOT_FOUND.formatted(username)
-                ));
+    public List<ProductDTO> getUserShoppingList(HttpHeaders headers) {
+        String username = authenticationHelper.tryGetUser(headers).username();
+        UserDTO userDTO = getUserByUsername(username);
+        return getUserShoppingList(headers, userDTO.id());
     }
 
     @Override
-    public List<ProductDTO> getUserShoppingList(int userId) {
+    public List<ProductDTO> getUserShoppingList(HttpHeaders headers, int userId) {
+        authenticateUser(headers, userId);
+
         UserEntity userEntity = getUserFromRepository(userId);
         return userEntity.getShoppingList()
                 .stream()
@@ -61,7 +68,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void addProductToShoppingList(int userId, int productId) {
+    public void addProductToShoppingList(HttpHeaders headers, int userId, int productId) {
+        authenticateUser(headers, userId);
+
         UserEntity userEntity = getUserFromRepository(userId);
 
         ProductEntity productEntity = productDAO.selectProductById(productId)
@@ -74,7 +83,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void removeProductFromShoppingList(int userId, int productId) {
+    public void removeProductFromShoppingList(HttpHeaders headers, int userId, int productId) {
+        authenticateUser(headers, userId);
+
         UserEntity userEntity = getUserFromRepository(userId);
 
         if (userEntity.getShoppingList().stream().noneMatch(product -> product.getId() == productId)) {
@@ -86,17 +97,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean authenticate(String username, String password) {
-        UserEntity userEntity = userDAO.selectUserByUsername(username)
+    public UserDTO getUserByUsername(String username) {
+        return userDAO.selectUserByUsername(username)
+                .map(userDTOMapper)
                 .orElseThrow(() -> new GroceryEntityNotFoundException(
                         USER_USERNAME_NOT_FOUND.formatted(username)
                 ));
-
-        if (!userEntity.getPassword().equals(password)) {
-            throw new GroceryAuthenticationException(WRONG_PASSWORD_MSG);
-        }
-
-        return true;
     }
 
     @Override
@@ -109,6 +115,30 @@ public class UserServiceImpl implements UserService {
 
         UserEntity newUserEntity = buildUserFromRequest(registerUserRequest);
         userDAO.insertUser(newUserEntity);
+    }
+
+    private void authenticateUser(HttpHeaders headers, int userId) {
+        AuthenticationHelper.Credentials credentials = authenticationHelper.tryGetUser(headers);
+        UserDTO currentUser = authenticateUserCredentials(credentials.username(), credentials.password());
+        checkAccessPermissions(userId, currentUser);
+    }
+
+    private UserDTO authenticateUserCredentials(String username, String password) {
+        UserEntity userEntity;
+        try {
+            userEntity = userDAO.selectUserByUsername(username)
+                    .orElseThrow(() -> new GroceryEntityNotFoundException(
+                            USER_USERNAME_NOT_FOUND.formatted(username)
+                    ));
+        } catch (GroceryEntityNotFoundException e) {
+            throw new GroceryAuthenticationException(INVALID_AUTHENTICATION_ERROR);
+        }
+
+        if (!userEntity.getPassword().equals(password)) {
+            throw new GroceryAuthenticationException(WRONG_PASSWORD_MSG);
+        }
+
+        return getUserByUsername(username);
     }
 
     private UserEntity getUserFromRepository(int userId) {
@@ -124,8 +154,15 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    private static void checkAccessPermissions(int targetUserId, UserDTO executingUser) {
+        if (executingUser.id() != targetUserId) {
+            throw new GroceryAuthorizationException(USER_AUTH_ERROR_MESSAGE);
+        }
+    }
+
     private UserEntity buildUserFromRequest(RegisterUserRequest registerUserRequest) {
-        return UserEntity.builder()
+        return UserEntity
+                .builder()
                 .username(registerUserRequest.getUsername())
                 .password(registerUserRequest.getPassword())
                 .firstName(registerUserRequest.getFirstname())
@@ -133,3 +170,4 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 }
+
