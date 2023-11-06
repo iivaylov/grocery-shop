@@ -69,11 +69,11 @@ Welcome to the **Groceries Shop** repository, a modern checkout solution demonst
 
 #### Step 4: Set Up Database Schema
 
-- Locate and execute the `grocery-shop-script.sql` file within the `db` folder of the project to set up the schema for your Groceries Shop database.
+- Locate and execute the `database-create-schema.sql` file within the `db` folder of the project to set up the schema for your Groceries Shop database.
 
 #### Step 5: Populate Database with Data
 
-- After setting up the schema, populate the database with initial data by executing the `grocery-shop-data.sql` file found in the `db` folder.
+- After setting up the schema, populate the database with initial data by executing the `database-insert-data.sql` file found in the `db` folder.
 
 ### Installation
 
