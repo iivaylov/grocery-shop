@@ -24,7 +24,9 @@
 - [Tech Stack](#%EF%B8%8F-tech-stack)
 - [Getting Started](#-getting-started)
   - [Database Setup](#%EF%B8%8F-database-setup)
+  - [Installation](#-installation)
 - [Swagger API Documentation](#-swagger-api-documentation)
+- [License](#-license)
 
 ---
 
@@ -73,6 +75,33 @@ Welcome to the **Groceries Shop** repository, a modern checkout solution demonst
 
 - After setting up the schema, populate the database with initial data by executing the `grocery-shop-data.sql` file found in the `db` folder.
 
+### Installation
+
+#### Step 1: Clone the Repository
+
+To get a development environment running, clone the repository and import it into your preferred IDE as a Gradle project.
+
+```bash
+git clone https://github.com/your-username/groceries-shop-till.git
+cd groceries-shop-till
+```
+
+#### Step 2: Configure Database Connection
+
+Configure your MariaDB database settings in `src/main/resources/application.properties`.
+
+#### Step 3: Build the Application
+
+Build the application by executing the following command in the root directory of the project:
+
+```bash
+./gradlew build
+```
+
+#### Step 4: Run the Application
+
+Run the application by executing the `main` method in `src/main/java/com/groceries/shop/GroceriesShopApplication.java`. The application will run on port `8080` by default. Use the following URL to access the application: `http://localhost:8080/`.
+
 ---
 
 ## 📄 Swagger API Documentation
@@ -80,5 +109,11 @@ Welcome to the **Groceries Shop** repository, a modern checkout solution demonst
 For easy navigation and testing of the Groceries Shop RESTful API, access the Swagger UI documentation by clicking the image below:
 
 [![Groceries Shop Swagger UI](./public/rest-picture.png)](http://localhost:8080/swagger-ui.html "Swagger API Documentation")
+
+---
+
+## 📄 License
+
+This project is licensed under the terms of the [MIT](/LICENSE) license.
 
 ---
