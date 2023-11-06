@@ -24,6 +24,7 @@ public class ProductServiceImpl implements ProductService {
     public static final String PRODUCT_ID_NOT_FOUND = "Product with id [%s] not found.";
     public static final String PRODUCT_NAME_NOT_FOUND = "Product named [%s] not found.";
     public static final String PRODUCT_ALREADY_EXISTS = "Product named [%s] already exists.";
+    public static final String PRODUCT_NOT_FOUND_AFTER_UPDATE = "Product not found after update.";
     private final ProductDAO productDAO;
     private final ProductDTOMapper productDTOMapper;
     private AuthenticationHelper authenticationHelper;
@@ -65,19 +66,20 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO updateProduct(HttpHeaders headers, int productId, ProductRequest productRequest) {
-        Optional<ProductEntity> existingProduct = productDAO.selectProductByName(productRequest.getName());
+        ProductEntity existingProduct = productDAO.selectProductById(productId)
+                .orElseThrow(() -> new GroceryEntityNotFoundException(
+                        PRODUCT_ID_NOT_FOUND.formatted(productId)
+                ));
 
-        ensureProductNamesMatch(productRequest, productId);
+        ensureProductNamesMatch(productRequest, existingProduct);
 
-        ProductEntity updatedProductEntity = existingProduct.map(product -> {
-            product.setName(productRequest.getName());
-            product.setPrice(productRequest.getPrice());
+        existingProduct.setName(productRequest.getName());
+        existingProduct.setPrice(productRequest.getPrice());
 
-            productDAO.updateProduct(product);
-            return product;
-        }).orElseThrow(() -> new GroceryEntityNotFoundException(
-                PRODUCT_NAME_NOT_FOUND.formatted(productRequest.getName())
-        ));
+        ProductEntity updatedProductEntity = productDAO.selectProductById(productId)
+                .orElseThrow(() -> new GroceryEntityNotFoundException(PRODUCT_NOT_FOUND_AFTER_UPDATE));
+
+        productDAO.updateProduct(updatedProductEntity);
 
         return productDTOMapper.apply(updatedProductEntity);
     }
@@ -92,9 +94,8 @@ public class ProductServiceImpl implements ProductService {
         productDAO.deleteProduct(productEntity);
     }
 
-    private void ensureProductNamesMatch(ProductRequest productRequest, int productId) {
-        ProductDTO productToUpdate = getProductById(productId);
-        if (!productToUpdate.name().equals(productRequest.getName())) {
+    private void ensureProductNamesMatch(ProductRequest productRequest, ProductEntity existingProduct) {
+        if (!productRequest.getName().equals(existingProduct.getName())) {
             throw new GroceryEntityNotFoundException(PRODUCT_ERROR_MSG);
         }
     }

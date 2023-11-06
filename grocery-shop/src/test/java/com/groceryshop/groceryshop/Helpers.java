@@ -2,9 +2,10 @@ package com.groceryshop.groceryshop;
 
 import com.groceryshop.groceryshop.controllers.requests.ProductRequest;
 import com.groceryshop.groceryshop.dtos.ProductDTO;
-import com.groceryshop.groceryshop.dtos.UserDTO;
+import com.groceryshop.groceryshop.models.DealEntity;
 import com.groceryshop.groceryshop.models.ProductEntity;
-import com.groceryshop.groceryshop.models.UserEntity;
+import com.groceryshop.groceryshop.models.enums.DealEnum;
+import org.springframework.http.HttpHeaders;
 
 import java.util.List;
 
@@ -15,7 +16,19 @@ public class Helpers {
                 .id(1)
                 .name("MockProduct")
                 .price(10)
+                .dealEntity(List.of(createMockDealTwoForThree()))
                 .build();
+    }
+
+    public static DealEntity createMockDealTwoForThree() {
+        return DealEntity.builder()
+                .id(1)
+                .dealEnum(DealEnum.TWO_FOR_THREE)
+                .build();
+    }
+
+    public static HttpHeaders createHeaders() {
+        return new HttpHeaders();
     }
 
     public static ProductDTO createMockProductDTO() {
@@ -29,26 +42,6 @@ public class Helpers {
         return ProductRequest.builder()
                 .name("MockProduct")
                 .price(10)
-                .build();
-    }
-
-    public static UserEntity createMockUser() {
-        return UserEntity.builder()
-                .id(1)
-                .username("MockUser")
-                .password("MockPassword")
-                .firstName("MockFirstName")
-                .lastName("MockLastName")
-                .shoppingList(List.of(createMockProduct()))
-                .build();
-    }
-
-    public static UserDTO createMockUserDTO() {
-        return UserDTO.builder()
-                .id(1)
-                .username("MockUser")
-                .firstname("MockFirstName")
-                .lastName("MockLastName")
                 .build();
     }
 }
